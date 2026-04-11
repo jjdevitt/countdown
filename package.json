@@ -3,9 +3,12 @@
   "version": "1.0.0",
   "description": "Meeting countdown timer SPA",
   "scripts": {
-    "start": "npx concurrently --kill-others \"npm run start-frontend\" \"npm run start-backend\"",
-    "start-frontend": "cd frontend && npm run dev",
+    "start-dev": "npx concurrently --kill-others \"npm run start-backend\" \"npm run start-frontend\"",
+    "start": "cd backend && npm start",
+    "build-frontend-to-backend": "cd frontend && npm run build -- --outDir ../backend/build --emptyOutDir",
+    "build": "npm run build-frontend-to-backend",
     "start-backend": "cd backend && npm start",
+    "start-frontend": "cd frontend && npm run dev",
     "stop": "pkill -f vite && pkill -f 'node server.js'"
   },
   "devDependencies": {
