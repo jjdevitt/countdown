@@ -1,0 +1,14 @@
+{
+  "name": "countdown-app",
+  "version": "1.0.0",
+  "description": "Meeting countdown timer SPA",
+  "scripts": {
+    "start": "npx concurrently --kill-others \"npm run start-frontend\" \"npm run start-backend\"",
+    "start-frontend": "cd frontend && npm run dev",
+    "start-backend": "cd backend && npm start",
+    "stop": "pkill -f vite && pkill -f 'node server.js'"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}
