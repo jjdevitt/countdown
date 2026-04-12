@@ -168,23 +168,6 @@ function App() {
           <div className="phase-label">Current phase</div>
           <h2>{currentPhase.name}</h2>
 
-          <div className="phase-colors">
-            <div className="phase-colors-label">Pick phase colors</div>
-            <div className="phase-color-grid">
-              {phases.map((phase, index) => (
-                <label key={phase.name + index} className="phase-color-control">
-                  <span>{phase.name}</span>
-                  <input
-                    type="color"
-                    value={phaseColors[index] || colors[index % colors.length]}
-                    onChange={event => updatePhaseColor(index, event.target.value)}
-                    disabled={isRunning}
-                  />
-                </label>
-              ))}
-            </div>
-          </div>
-
           <div className="phase-editor">
             <div className="phase-editor-header">
               <div className="phase-label">Phase editor</div>
@@ -209,6 +192,13 @@ function App() {
                     disabled={isRunning}
                     aria-label={`Phase ${index + 1} duration in minutes`}
                     placeholder="Minutes"
+                  />
+                  <input
+                    type="color"
+                    value={phaseColors[index] || colors[index % colors.length]}
+                    onChange={event => updatePhaseColor(index, event.target.value)}
+                    disabled={isRunning}
+                    aria-label={`Phase ${index + 1} color`}
                   />
                   <button
                     className="remove-phase-button"
