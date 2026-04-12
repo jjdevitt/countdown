@@ -21,6 +21,7 @@ function createPiePath(cx, cy, r, startAngle, endAngle) {
 
 function App() {
   const [phases, setPhases] = useState([]);
+  const [phaseColors, setPhaseColors] = useState([]);
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
@@ -32,10 +33,24 @@ function App() {
         setPhases(data);
         if (data.length > 0) {
           setTimeLeft(data[0].duration);
+          setPhaseColors(data.map((phase, index) => phase.color || colors[index % colors.length]));
         }
       })
       .catch(error => console.error('Error fetching phases:', error));
   }, []);
+
+  useEffect(() => {
+    if (phases.length === 0 || phaseColors.length === phases.length) return;
+    setPhaseColors(phases.map((phase, index) => phase.color || colors[index % colors.length]));
+  }, [phases, phaseColors.length]);
+
+  const updatePhaseColor = (index, color) => {
+    setPhaseColors(prev => {
+      const next = [...prev];
+      next[index] = color;
+      return next;
+    });
+  };
 
   useEffect(() => {
     if (!isRunning || phases.length === 0) return;
@@ -75,6 +90,39 @@ function App() {
     setTimeLeft(phases[0]?.duration || 0);
   };
 
+  const updatePhaseField = (index, field, value) => {
+    setPhases(prev => prev.map((phase, i) => {
+      if (i !== index) return phase;
+      return {
+        ...phase,
+        [field]: field === 'duration' ? Math.max(1, Number(value)) * 60 : value,
+      };
+    }));
+
+    if (field === 'duration' && !isRunning && currentPhaseIndex === index) {
+      setTimeLeft(Math.max(1, Number(value)) * 60);
+    }
+  };
+
+  const addPhase = () => {
+    setPhases(prev => [...prev, { name: 'New Phase', duration: 300 }]);
+    setPhaseColors(prev => [...prev, colors[prev.length % colors.length]]);
+  };
+
+  const removePhase = index => {
+    setPhases(prev => {
+      const next = prev.filter((_, i) => i !== index);
+      setCurrentPhaseIndex(cur => {
+        if (next.length === 0) return 0;
+        if (cur > index) return cur - 1;
+        if (cur === index) return Math.min(cur, next.length - 1);
+        return cur;
+      });
+      return next;
+    });
+    setPhaseColors(prev => prev.filter((_, i) => i !== index));
+  };
+
   const formatTime = seconds => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -92,7 +140,7 @@ function App() {
       const sweep = (phase.duration / totalDuration) * 360;
       const segment = {
         ...phase,
-        color: colors[index % colors.length],
+        color: phaseColors[index] || colors[index % colors.length],
         startAngle,
         endAngle: startAngle + sweep,
         path: createPiePath(100, 100, 90, startAngle, startAngle + sweep),
@@ -100,7 +148,13 @@ function App() {
       startAngle += sweep;
       return segment;
     });
-  }, [phases, totalDuration]);
+  }, [phases, phaseColors, totalDuration]);
+
+  useEffect(() => {
+    if (!isRunning && phases.length > 0 && currentPhaseIndex < phases.length) {
+      setTimeLeft(prev => Math.min(prev, phases[currentPhaseIndex].duration));
+    }
+  }, [phases, currentPhaseIndex, isRunning]);
 
   const currentPhase = phases[currentPhaseIndex];
   const phaseProgress = currentPhase ? 1 - timeLeft / currentPhase.duration : 0;
@@ -113,6 +167,61 @@ function App() {
         <div className="timer-card">
           <div className="phase-label">Current phase</div>
           <h2>{currentPhase.name}</h2>
+
+          <div className="phase-colors">
+            <div className="phase-colors-label">Pick phase colors</div>
+            <div className="phase-color-grid">
+              {phases.map((phase, index) => (
+                <label key={phase.name + index} className="phase-color-control">
+                  <span>{phase.name}</span>
+                  <input
+                    type="color"
+                    value={phaseColors[index] || colors[index % colors.length]}
+                    onChange={event => updatePhaseColor(index, event.target.value)}
+                    disabled={isRunning}
+                  />
+                </label>
+              ))}
+            </div>
+          </div>
+
+          <div className="phase-editor">
+            <div className="phase-editor-header">
+              <div className="phase-label">Phase editor</div>
+              <button className="small-button" onClick={addPhase} disabled={isRunning}>Add phase</button>
+            </div>
+            <div className="phase-editor-list">
+              {phases.map((phase, index) => (
+                <div key={phase.name + index} className="phase-editor-row">
+                  <input
+                    type="text"
+                    value={phase.name}
+                    onChange={event => updatePhaseField(index, 'name', event.target.value)}
+                    disabled={isRunning}
+                    aria-label={`Phase ${index + 1} name`}
+                  />
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={phase.duration / 60}
+                    onChange={event => updatePhaseField(index, 'duration', event.target.value)}
+                    disabled={isRunning}
+                    aria-label={`Phase ${index + 1} duration in minutes`}
+                    placeholder="Minutes"
+                  />
+                  <button
+                    className="remove-phase-button"
+                    onClick={() => removePhase(index)}
+                    disabled={isRunning || phases.length === 1}
+                    type="button"
+                  >
+                    Remove
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
 
           <div className="chart-wrapper">
             <div className="pie-chart">
@@ -146,7 +255,7 @@ function App() {
             <div className="legend">
               {phases.map((phase, index) => (
                 <div key={phase.name + index} className="legend-item">
-                  <span className="legend-color" style={{ background: colors[index % colors.length] }} />
+                  <span className="legend-color" style={{ background: phaseColors[index] || colors[index % colors.length] }} />
                   <div>
                     <div className="legend-name">{phase.name}</div>
                     <div className="legend-duration">{formatTime(phase.duration)}</div>

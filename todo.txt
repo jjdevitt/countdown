@@ -1,3 +1,2 @@
-- add color picker to the main page for phases
 - modify countdown so it doesn't prompt anymore and counts down all the way
-- add functionality to edit and add phases
+- refactory main page to move editing options elsewhere
