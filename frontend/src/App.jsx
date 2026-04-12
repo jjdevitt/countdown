@@ -26,7 +26,7 @@ function App() {
   const [isRunning, setIsRunning] = useState(false);
 
   useEffect(() => {
-    fetch('http://localhost:3001/api/phases')
+    fetch('/api/phases')
       .then(response => response.json())
       .then(data => {
         setPhases(data);
