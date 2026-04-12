@@ -18,4 +18,4 @@ cd frontend
 npm run build -- --outDir ../backend/build --emptyOutDir
 cd ..
 
-echo "Setup complete. Run ./start-dev.sh to start development servers."
+echo "Build completed Successfully."
