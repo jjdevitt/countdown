@@ -1,5 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import './App.css';
+
+const colors = ['#304ffe', '#1a73e8', '#00c853', '#ffab00', '#d50000', '#aa00ff'];
+
+function polarToCartesian(cx, cy, r, angle) {
+  const radians = ((angle - 90) * Math.PI) / 180;
+  return {
+    x: cx + r * Math.cos(radians),
+    y: cy + r * Math.sin(radians),
+  };
+}
+
+function createPiePath(cx, cy, r, startAngle, endAngle) {
+  const start = polarToCartesian(cx, cy, r, startAngle);
+  const end = polarToCartesian(cx, cy, r, endAngle);
+  const largeArcFlag = endAngle - startAngle <= 180 ? 0 : 1;
+
+  return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArcFlag} 1 ${end.x} ${end.y} Z`;
+}
 
 function App() {
   const [phases, setPhases] = useState([]);
@@ -63,7 +81,29 @@ function App() {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  const totalDuration = useMemo(
+    () => phases.reduce((sum, phase) => sum + phase.duration, 0),
+    [phases],
+  );
+
+  const pieSegments = useMemo(() => {
+    let startAngle = 0;
+    return phases.map((phase, index) => {
+      const sweep = (phase.duration / totalDuration) * 360;
+      const segment = {
+        ...phase,
+        color: colors[index % colors.length],
+        startAngle,
+        endAngle: startAngle + sweep,
+        path: createPiePath(100, 100, 90, startAngle, startAngle + sweep),
+      };
+      startAngle += sweep;
+      return segment;
+    });
+  }, [phases, totalDuration]);
+
   const currentPhase = phases[currentPhaseIndex];
+  const phaseProgress = currentPhase ? 1 - timeLeft / currentPhase.duration : 0;
 
   return (
     <div className="app">
@@ -73,7 +113,53 @@ function App() {
         <div className="timer-card">
           <div className="phase-label">Current phase</div>
           <h2>{currentPhase.name}</h2>
-          <div className="countdown">{formatTime(timeLeft)}</div>
+
+          <div className="chart-wrapper">
+            <div className="pie-chart">
+              <svg viewBox="0 0 200 200" aria-label="Phase progress chart">
+                {pieSegments.map((segment, index) => (
+                  <path
+                    key={segment.name + index}
+                    d={segment.path}
+                    fill={segment.color}
+                    opacity={index === currentPhaseIndex ? 1 : 0.75}
+                    className={index === currentPhaseIndex ? 'segment-current' : ''}
+                  />
+                ))}
+                <circle cx="100" cy="100" r="60" fill="#ffffff" />
+                <circle
+                  cx="100"
+                  cy="100"
+                  r="60"
+                  fill="transparent"
+                  stroke="#304ffe"
+                  strokeWidth="12"
+                  strokeDasharray={`${Math.max(0, phaseProgress) * 377} 377`}
+                  transform="rotate(-90 100 100)"
+                  strokeLinecap="round"
+                />
+                <text x="100" y="90" className="chart-center-label">{formatTime(timeLeft)}</text>
+                <text x="100" y="112" className="chart-center-subtitle">{currentPhase.name}</text>
+              </svg>
+            </div>
+
+            <div className="legend">
+              {phases.map((phase, index) => (
+                <div key={phase.name + index} className="legend-item">
+                  <span className="legend-color" style={{ background: colors[index % colors.length] }} />
+                  <div>
+                    <div className="legend-name">{phase.name}</div>
+                    <div className="legend-duration">{formatTime(phase.duration)}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="progress-note">
+            Phase {currentPhaseIndex + 1} of {phases.length} · {Math.round(phaseProgress * 100)}% complete
+          </div>
+
           <div className="controls">
             {!isRunning ? (
               <button onClick={startTimer}>Start</button>
