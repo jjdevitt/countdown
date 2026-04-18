@@ -1,2 +1,3 @@
 - modify countdown so it doesn't prompt anymore and counts down all the way
-- refactory main page to move editing options elsewhere
+- fix display issue with editors
+- move editors to second page?

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import './App.css';
-import Editor from './Editor.jsx';
+import PhaseEditor from './PhaseEditor.jsx';
 
 const colors = ['#304ffe', '#1a73e8', '#00c853', '#ffab00', '#d50000', '#aa00ff'];
 
@@ -26,6 +26,7 @@ function App() {
   const [currentPhaseIndex, setCurrentPhaseIndex] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
+  const [showEditor, setShowEditor] = useState(false);
 
   useEffect(() => {
     fetch('/api/phases')
@@ -222,17 +223,20 @@ function App() {
               <button onClick={pauseTimer}>Pause</button>
             )}
             <button onClick={resetTimer}>Reset</button>
+            <button onClick={() => setShowEditor(!showEditor)}>Edit</button>
           </div>
 
-          <Editor
-            phases={phases}
-            phaseColors={phaseColors}
-            isRunning={isRunning}
-            onUpdatePhaseField={updatePhaseField}
-            onUpdatePhaseColor={updatePhaseColor}
-            onAddPhase={addPhase}
-            onRemovePhase={removePhase}
-          />
+          {showEditor && (
+            <PhaseEditor
+              phases={phases}
+              phaseColors={phaseColors}
+              isRunning={isRunning}
+              onUpdatePhaseField={updatePhaseField}
+              onUpdatePhaseColor={updatePhaseColor}
+              onAddPhase={addPhase}
+              onRemovePhase={removePhase}
+            />
+          )}
         </div>
       ) : (
         <p>Loading phases...</p>

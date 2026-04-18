@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 const colors = ['#304ffe', '#1a73e8', '#00c853', '#ffab00', '#d50000', '#aa00ff'];
 
-function Editor({ phases, phaseColors, isRunning, onUpdatePhaseField, onUpdatePhaseColor, onAddPhase, onRemovePhase }) {
+function PhaseEditor({ phases, phaseColors, isRunning, onUpdatePhaseField, onUpdatePhaseColor, onAddPhase, onRemovePhase }) {
   return (
     <div className="phase-editor">
       <div className="phase-editor-header">
@@ -51,4 +51,4 @@ function Editor({ phases, phaseColors, isRunning, onUpdatePhaseField, onUpdatePh
   );
 }
 
-export default Editor;
+export default PhaseEditor;
